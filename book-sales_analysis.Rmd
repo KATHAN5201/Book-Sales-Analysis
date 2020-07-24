@@ -1,0 +1,166 @@
+---
+title: "Book Sales Analysis"
+author: "Kathan Vakharia"
+date: "24/07/2020"
+output: html_document
+---
+## Introduction
+* This project demonstrates a simple data analyses work flow on a book 
+sales [data set](https://data.world/dataquest/book-reviews).
+* The main objective of this analysis is to find out which book is most famous.
+
+### Importing the data-set
+```{r importing-data, message=FALSE}
+library(tidyverse)
+book_reviews = read_csv("../datasets/book_reviews.csv")
+```
+
+### Getting Insights from Data-Set
+```{r Getting used to dataset}
+#getting over-view 
+glimpse(book_reviews) 
+column_vector <- colnames(book_reviews)
+print(column_vector)
+print(book_reviews)
+```
+
+```{r}
+#another way to inspect data type of columns
+for(column in column_vector){
+  print(typeof(book_reviews[[column]]))
+}
+```
+```{r}
+#finding unique values for categorical variables
+#This helps to check if NA values are present
+review_values <- unique(book_reviews$review)
+states_values <- unique(book_reviews$state)
+prices_values <- unique(book_reviews$price)
+list("unique_reviews"=review_values, "unique_states" = states_values,
+     "unique_prices"=prices_values)
+```
+```{r}
+#min max price
+min_price <- min(book_reviews$price)
+max_price <- max(book_reviews$price)
+
+print(c("min_price"=min_price, "max_price" = max_price))
+
+```
+
+### Dealing will NA values
+By examining unique values of reviews, we can see there are "NA"(Not Available) values present for some rows.So we are gonna remove it
+```{r}
+#removing rows with NA values
+book_reviews_cleaned <- book_reviews %>%
+  filter(!is.na(review))
+
+#comparing the old and cleaned data set
+list("old_dimensions"=dim(book_reviews), "new_dimensions"=dim(book_reviews_cleaned))
+
+```
+### Removing inconsistencies in State Names
+As some states' name are full names and some are shortened versions,for consistency, we converted every state name to shortened version.
+```{r}
+book_reviews_cleaned <- book_reviews_cleaned %>%
+  mutate(state = case_when(
+    state == "California" ~ "CA",
+    state == "New York" ~ "NY",
+    state == "Texas" ~ "TX",
+    state == "Florida" ~ "FL",
+    TRUE ~ state
+  ))
+```
+### Converting Reviews into numbers
+As reviews as strings won't give us much context, it is better we convert them into numbers for example, Excellent = 5,..., Poor = 1
+```{r}
+book_reviews_cleaned <- book_reviews_cleaned %>%
+  mutate(review_num = case_when(
+    review == "Poor" ~ 1,
+    review == "Fair" ~ 2,
+    review == "Good" ~ 3,
+    review == "Great" ~ 4,
+    review == "Excellent" ~ 5
+  ))
+```
+
+#### Marking some reviews as HIGH
+Just for sake to see high rated books, creating a Logical column,which will
+be TRUE if review_num >= 4 and FALSE otherwise.
+
+```{r}
+book_reviews_cleaned <- book_reviews_cleaned %>%
+  mutate(is_high_review = case_when(
+    review_num > 3 ~ TRUE,
+    TRUE ~ FALSE
+  ))
+```
+
+### Finding the most profitable book
+There are two parameters we can judge which book is profitable,
+
+ 1. Which was sold most.
+ 2. Which generated maximum revenue 
+ *  Both metrics are plausible
+
+#### Making potent columns
+
+1. copies_sold = contains number of copies sold
+2. revenue_generated = contains total revenue generated
+
+```{r}
+book_review_summarised <- book_reviews_cleaned %>%
+  group_by(book) %>%
+  summarise(
+    copies_sold = length(book),
+    revenue_generated = sum(price),
+    .groups = 'drop'
+  )
+```
+
+### Sorting by copies_sold
+```{r}
+books_sold_most <- book_review_summarised %>% arrange(desc(copies_sold))
+```
+
+```{r echo=FALSE}
+print(books_sold_most)
+```
+So, we conclude that <strong> _`r books_sold_most$book[1]`_</strong>   was sold maximum number of times.
+
+### Sorting by revenue_generated
+```{r}
+books_revenue_most <- book_review_summarised %>% arrange(desc(revenue_generated))
+```
+So, we conclude that  <b>_`r books_revenue_most$book[1]`_</b>  generated maximum revenue.
+
+```{r echo=FALSE}
+print(books_revenue_most )
+```
+
+## Conclusion:
+In the end, we conclude that depending on different parameters famous books are different. Although there's not much difference between the most famous and rest
+
+* Limitation : We skipped the rows with NA values which might have some useful data
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
