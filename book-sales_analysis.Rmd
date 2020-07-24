@@ -12,7 +12,7 @@ sales [data set](https://data.world/dataquest/book-reviews).
 ### Importing the data-set
 ```{r importing-data, message=FALSE}
 library(tidyverse)
-book_reviews = read_csv("../datasets/book_reviews.csv")
+book_reviews = read_csv("book_reviews.csv")
 ```
 
 ### Getting Insights from Data-Set
